@@ -64,53 +64,99 @@
 本项目为 **华中农业大学 计算机图形学课程大作业**，  
 重点在于图形学原理在实时渲染系统中的综合应用，而非单一算法实现。
 
-#参考资料
-参考资料
+# 参考资料
 MMD人物模型:
+
  [1] 【Akie秋绘】(枫雪) B站/Bilibili Homepage: https://space.bilibili.com/4176573/ 
+ 
 模型制作/モデル制作/Modelling: 筱米 
+
 绑骨制作/スケルトンリギング/Skeleton rigging: 时の雨制作 
+
 物理制作/物理/Physics: 时の雨 
+
 表情制作/表情/Emotions: 筱米 
+
 贴图制作/ステッカー/Stickers: 筱米 
+
 原画设计/原画/Original Illustration: 狗脸Dogface 
+
 造型设计/造形デザイン/Style design: 深雪Fukayuki
+
 MMD动作:
+
  [2] 【テイルズオブMMD】夜明けと蛍【モーション配布】/ユウキ凛(sm35723132)
+ 
 镜头灵感:
+
  [3] 【テイルズオブMMD】夜明けと蛍【モーション配布】/ユウキ凛(sm35723132)．https://www.bilibili.com/video/BV1M14y127Dt/
+ 
 BGM: 
+
 [4] 「夜明けと蛍」原曲: n-buna(sm24892241)，原唱: 初音ミク，翻唱: Akie秋绘
+
 场景灵感: 
+
 [5] Bilibili．场景设计参考．https://www.bilibili.com/video/BV1u84y1w7ZF/
+
 场景模型资产:
+
  [6] Bilibili．场景模型资产．https://www.bilibili.com/video/BV1Fq4y1L7Su/
+ 
 C#学习:
+
  [7] Bilibili．C#编程教程．https://www.bilibili.com/video/BV1Z4411y7Ff/
+ 
 UnityShader学习: 
+
 [8] Bilibili．Unity Shader教程．https://www.bilibili.com/video/BV1ni421e79H/
+
 Unity地形: 
+
 [9] Bilibili．Unity地形系统．https://www.bilibili.com/video/BV1ecj4zsE75/
+
 平面反射: 
+
 [10] Bilibili．Unity平面反射．https://www.bilibili.com/video/BV1fx4y1W7vs/ 
+
 [11] yunyou730．Unity Render Lab．https://github.com/yunyou730/unityrenderlab
+
 极光shader: 
+
 [12] Chamberlain, J. W．Physics of the Aurora and Airglow．Academic Press，1961．
+
  [13] Bilibili．极光Shader解析．https://www.bilibili.com/opus/1128242188785811512
+ 
 SSR: 
+
 [14] 知乎．屏幕空间反射原理．https://zhuanlan.zhihu.com/p/650035462 
+
 [15] GitCode．Unity-ScreenSpaceReflections-URP．https://gitcode.com/gh_mirrors/un/Unity-ScreenSpaceReflections-URP/ 
+
 [16] Bilibili．Unity URP SSR教程．https://www.bilibili.com/video/BV161evzMEe1/ 
+
 [17] 知乎．SSR技术详解．https://zhuanlan.zhihu.com/p/355949234
+
 体积光:
+
  [18] 知乎．体积光渲染原理．https://zhuanlan.zhihu.com/p/604036380 
+ 
 [19] Bilibili．Unity体积光教程．https://www.bilibili.com/video/BV1XB5YziEz8/ 
+
 [20] CristianQiu．Unity-URP-Volumetric-Light．https://github.com/CristianQiu/Unity-URP-Volumetric-Light
+
 MMD: 
+
 [21] Bilibili．Unity MMD导入教程．https://www.bilibili.com/video/BV1KmZbY2E1Q/
+
 人物渲染:
+
  [22] Bilibili．二次元卡通渲染教程．https://www.bilibili.com/video/BV1YH8HzkEGR/ 
+ 
 [23] LearnOpenGL CN．OpenGL图形学教程．https://learnopengl-cn.readthedocs.io/zh/latest/ 
+
 [24] Bilibili．角色渲染技术．https://www.bilibili.com/video/BV15tSuYJEvh/
+
 镜头学习: 
+
 [25] Bilibili．镜头运动与分镜教程．https://www.bilibili.com/video/BV12Dp7eGEAA/
