@@ -1,65 +1,59 @@
-// ============================================================================
-// ToonFace_SDF.shader - 带原神风格面部阴影的Toon Face渲染
-// 特点：不需要SDF贴图，用数学模拟面部阴影边界
-// ============================================================================
-
 Shader "MMD/ToonFace_SDF"
 {
     Properties
     {
-        // ====== Base Texture ======
+        // 基础纹理
         [Header(Base Texture)]
         _BaseMap ("Base Map", 2D) = "white" {}
         _BaseColor ("Base Color", Color) = (1, 1, 1, 1)
         
-        // ====== Face Shadow (Genshin Style) ======
+        // 面部阴影参数（原神风格）
         [Header(Face Shadow Settings)]
-        _ShadowColor ("Shadow Color", Color) = (0.85, 0.75, 0.8, 1)
+        _ShadowColor ("Shadow Color", Color) = (0.85, 0.75, 0.8, 1)  // 面部阴影偏暖色
         _ShadowSoftness ("Shadow Softness", Range(0.001, 0.3)) = 0.05
-        _FaceShadowOffset ("Face Shadow Offset", Range(-1, 1)) = 0.0
+        _FaceShadowOffset ("Face Shadow Offset", Range(-1, 1)) = 0.0  // 阴影偏移微调
         
-        // Face UV Center (调整这个来匹配你的脸部UV中心)
+        // 面部UV设置
         [Header(Face UV Settings)]
-        _FaceCenterU ("Face Center U", Range(0, 1)) = 0.5
-        _FaceCenterV ("Face Center V", Range(0, 1)) = 0.5
-        _FaceUVScale ("Face UV Scale", Range(0.1, 5)) = 1.0
+        _FaceCenterU ("Face Center U", Range(0, 1)) = 0.5   // 脸部UV中心X
+        _FaceCenterV ("Face Center V", Range(0, 1)) = 0.5   // 脸部UV中心Y
+        _FaceUVScale ("Face UV Scale", Range(0.1, 5)) = 1.0 // UV缩放
         
-        // 阴影形状控制
+        //阴影形状控制
         [Header(Shadow Shape)]
-        _ShadowSharpness ("Shadow Sharpness", Range(1, 10)) = 3.0
-        _NoseShadowStrength ("Nose Shadow Strength", Range(0, 1)) = 0.3
-        _CheekShadowCurve ("Cheek Shadow Curve", Range(0, 2)) = 0.8
+        _ShadowSharpness ("Shadow Sharpness", Range(1, 10)) = 3.0    // 阴影边缘锐度
+        _NoseShadowStrength ("Nose Shadow Strength", Range(0, 1)) = 0.3  // 鼻子阴影强度
+        _CheekShadowCurve ("Cheek Shadow Curve", Range(0, 2)) = 0.8   // 脸颊曲线弧度
         
-        // Face Direction Override
+        // 面部朝向向量 
         [Header(Face Direction)]
         [Toggle(_USE_FACE_DIRECTION)] _UseFaceDirection ("Use Face Direction", Float) = 1
-        _FaceForward ("Face Forward Local", Vector) = (0, 0, 1, 0)
-        _FaceRight ("Face Right Local", Vector) = (1, 0, 0, 0)
+        _FaceForward ("Face Forward Local", Vector) = (0, 0, 1, 0)  // 脸朝前的方向
+        _FaceRight ("Face Right Local", Vector) = (1, 0, 0, 0)      // 脸右侧的方向
         
-        // ====== Night Scene ======
+        // 夜景亮度
         [Header(Night Scene)]
         _MinBrightness ("Min Brightness", Range(0, 1)) = 0.5
         _AmbientColor ("Ambient Color", Color) = (0.2, 0.2, 0.28, 1)
         _AmbientIntensity ("Ambient Intensity", Range(0, 1)) = 0.4
         
-        // ====== Cheek Blush ======
+        // 腮红效果
         [Header(Cheek Blush)]
         [Toggle(_ENABLE_BLUSH)] _EnableBlush ("Enable Blush", Float) = 0
         _BlushColor ("Blush Color", Color) = (1, 0.6, 0.6, 1)
         _BlushIntensity ("Blush Intensity", Range(0, 1)) = 0.2
-        _BlushPosition ("Blush Position UV", Vector) = (0.3, 0.4, 0.7, 0.4)
+        _BlushPosition ("Blush Position UV", Vector) = (0.3, 0.4, 0.7, 0.4)  // 左右脸颊位置
         _BlushSize ("Blush Size", Range(0.01, 0.3)) = 0.08
         
-        // ====== Rim Light ======
+        // 边缘光和描边
         [Header(Rim Light)]
         _RimColor ("Rim Color", Color) = (0.7, 0.75, 1.0, 1)
         _RimPower ("Rim Power", Range(1, 10)) = 5
         _RimIntensity ("Rim Intensity", Range(0, 1)) = 0.2
         
-        // ====== Outline ======
         [Header(Outline)]
         _OutlineColor ("Outline Color", Color) = (0.15, 0.12, 0.18, 1)
-        _OutlineWidth ("Outline Width", Range(0, 0.003)) = 0.0005
+        _OutlineWidth ("Outline Width", Range(0, 0.003)) = 0.0005  // 面部描边通常更细
     }
     
     SubShader
@@ -68,7 +62,7 @@ Shader "MMD/ToonFace_SDF"
         {
             "RenderPipeline" = "UniversalPipeline"
             "RenderType" = "Opaque"
-            "Queue" = "Geometry+10"
+            "Queue" = "Geometry+10"  // 稍后渲染，确保在身体之上
         }
         
         HLSLINCLUDE
@@ -108,9 +102,7 @@ Shader "MMD/ToonFace_SDF"
             
         ENDHLSL
         
-        // ============================================================
-        // Pass 1: Outline
-        // ============================================================
+        // 描边
         Pass
         {
             Name "Outline"
@@ -152,9 +144,7 @@ Shader "MMD/ToonFace_SDF"
             ENDHLSL
         }
         
-        // ============================================================
-        // Pass 2: Face Forward Rendering with SDF-like Shadow
-        // ============================================================
+        // 面部前向渲染
         Pass
         {
             Name "FaceForward"
@@ -188,32 +178,29 @@ Shader "MMD/ToonFace_SDF"
                 float3 normalWS : TEXCOORD1;
                 float3 viewDirWS : TEXCOORD2;
                 float3 positionWS : TEXCOORD3;
-                float3 faceFwdWS : TEXCOORD4;
-                float3 faceRightWS : TEXCOORD5;
+                float3 faceFwdWS : TEXCOORD4;    // 脸朝向
+                float3 faceRightWS : TEXCOORD5;  // 脸右侧
             };
             
-            // ========================================
-            // 模拟SDF的函数 - 核心算法
-            // ========================================
             half CalculateFaceSDF(float2 uv, half lightDirX, half faceCenter)
             {
-                // 将UV转换为相对于脸部中心的坐标
+                // 1. 将UV转换为相对于脸部中心的坐标
                 float2 centeredUV = (uv - float2(_FaceCenterU, _FaceCenterV)) * _FaceUVScale;
                 
-                // 基于光照方向的阴影计算
-                // lightDirX: 正值=光从右边来, 负值=光从左边来
-                
-                // 脸部轮廓曲线 (模拟脸颊的弧度)
+                // 2. 脸颊曲线
+                // 模拟脸颊的弧度，让阴影边界更自然
                 half cheekCurve = pow(abs(centeredUV.y), _CheekShadowCurve) * 0.5;
                 
-                // 计算阴影阈值
+                // 3.计算阴影阈值
+                // lightDirX: 正值=光从右边来, 负值=光从左边来
                 // 当光从右边来时，左半边脸应该在阴影中
                 half shadowThreshold = centeredUV.x * sign(lightDirX) * _ShadowSharpness;
                 
-                // 添加脸颊曲线影响
+                // 4. 添加脸颊曲线影响
                 shadowThreshold += cheekCurve * sign(lightDirX);
                 
-                // 鼻子区域的额外阴影 (UV中心附近)
+                // 5. 鼻子区域的额外阴影 
+                // UV中心附近是鼻子，需要特殊处理
                 half noseDist = length(centeredUV * float2(2.0, 1.0));
                 half noseShadow = (1.0 - saturate(noseDist * 3.0)) * _NoseShadowStrength;
                 shadowThreshold -= noseShadow * abs(lightDirX);
@@ -235,6 +222,7 @@ Shader "MMD/ToonFace_SDF"
                 output.viewDirWS = GetWorldSpaceViewDir(posInputs.positionWS);
                 output.uv = TRANSFORM_TEX(input.uv, _BaseMap);
                 
+                //将面部方向向量转换到世界空间
                 output.faceFwdWS = TransformObjectToWorldDir(_FaceForward.xyz);
                 output.faceRightWS = TransformObjectToWorldDir(_FaceRight.xyz);
                 
@@ -243,15 +231,11 @@ Shader "MMD/ToonFace_SDF"
             
             half4 FaceFS(Varyings input, bool isFrontFace : SV_IsFrontFace) : SV_TARGET
             {
-                // ========================================
-                // Step 1: Sample base texture
-                // ========================================
+                // 采样基础纹理
                 half4 baseMap = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv);
                 half3 baseColor = baseMap.rgb * _BaseColor.rgb;
                 
-                // ========================================
-                // Step 2: Get lighting info
-                // ========================================
+                // 获取光照信息
                 float4 shadowCoord = TransformWorldToShadowCoord(input.positionWS);
                 Light mainLight = GetMainLight(shadowCoord);
                 
@@ -264,31 +248,28 @@ Shader "MMD/ToonFace_SDF"
                     N = -N;
                 }
                 
-                // ========================================
-                // Step 3: Genshin-style face shadow
-                // ========================================
+                //面部阴影计算 
                 half shadowValue = 0.5;
                 
                 #ifdef _USE_FACE_DIRECTION
-                    half3 faceFwd = normalize(input.faceFwdWS);
-                    half3 faceRight = normalize(input.faceRightWS);
+                    half3 faceFwd = normalize(input.faceFwdWS);    // 脸朝向
+                    half3 faceRight = normalize(input.faceRightWS); // 脸右侧
                     
-                    // 计算光照在脸部平面上的投影
-                    half FdotL = dot(faceFwd, L);  // 前后
-                    half RdotL = dot(faceRight, L); // 左右
+                    // 计算光照在脸部平面上的投影 
+                    half FdotL = dot(faceFwd, L);   // 前后判断
+                    half RdotL = dot(faceRight, L); // 左右判断
                     
                     // 添加偏移控制
                     half adjustedFdotL = FdotL + _FaceShadowOffset;
                     
-                    // ====== 核心：模拟SDF阴影 ======
-                    // 计算基于UV的阴影阈值
+                    // 模拟SDF阴影
                     half sdfValue = CalculateFaceSDF(input.uv, RdotL, _FaceCenterU);
                     
                     // 结合光照方向和SDF
                     // FdotL控制整体明暗，RdotL控制左右阴影分布
                     half baseShadow = adjustedFdotL * 0.5 + 0.5;
                     
-                    // SDF影响：当光从侧面来时，阴影边界更明显
+                    // 当光从侧面来时，阴影边界更明显
                     half sideInfluence = abs(RdotL);
                     shadowValue = baseShadow + sdfValue * sideInfluence * 0.3;
                     
@@ -296,16 +277,15 @@ Shader "MMD/ToonFace_SDF"
                     shadowValue = lerp(shadowValue, 0.0, saturate(-adjustedFdotL));
                     
                 #else
+                    // 如果不使用面部方向，退回到普通Half Lambert
                     half NdotL = dot(N, L);
                     shadowValue = NdotL * 0.5 + 0.5;
                 #endif
                 
-                // Apply minimum brightness
+                // 应用最低亮度保护
                 shadowValue = max(shadowValue, _MinBrightness * 0.3);
                 
-                // ========================================
-                // Step 4: Toon shadow with sharp edge
-                // ========================================
+                //卡通阴影
                 half shadowMask = smoothstep(
                     0.5 - _ShadowSoftness,
                     0.5 + _ShadowSoftness,
@@ -315,21 +295,17 @@ Shader "MMD/ToonFace_SDF"
                 half3 shadowColor = baseColor * _ShadowColor.rgb;
                 half3 diffuse = lerp(shadowColor, baseColor, shadowMask);
                 
-                // ========================================
-                // Step 5: Ambient light
-                // ========================================
+                // Step 5: 环境光
                 half3 ambient = baseColor * _AmbientColor.rgb * _AmbientIntensity;
                 diffuse = diffuse + ambient;
                 
-                // Unity realtime shadow
+                // Unity实时阴影
                 diffuse *= lerp(0.85, 1.0, mainLight.shadowAttenuation);
                 
-                // ========================================
-                // Step 6: Cheek blush (optional)
-                // ========================================
+                //  腮红效果
                 #ifdef _ENABLE_BLUSH
-                    float2 blushPos1 = _BlushPosition.xy;
-                    float2 blushPos2 = _BlushPosition.zw;
+                    float2 blushPos1 = _BlushPosition.xy;  // 左脸颊
+                    float2 blushPos2 = _BlushPosition.zw;  // 右脸颊
                     
                     float dist1 = distance(input.uv, blushPos1);
                     float dist2 = distance(input.uv, blushPos2);
@@ -341,17 +317,14 @@ Shader "MMD/ToonFace_SDF"
                     diffuse = lerp(diffuse, diffuse * _BlushColor.rgb, blushMask * _BlushIntensity);
                 #endif
                 
-                // ========================================
-                // Step 7: Rim light
-                // ========================================
+                // 边缘光
+
                 half NdotV = saturate(dot(N, V));
                 half rim = pow(1.0 - NdotV, _RimPower);
                 rim *= smoothstep(0.0, 0.3, 1.0 - NdotV);
                 half3 rimColor = _RimColor.rgb * rim * _RimIntensity;
                 
-                // ========================================
-                // Step 8: Final composition
-                // ========================================
+                // 最终合成
                 half3 finalColor = diffuse + rimColor;
                 finalColor = max(finalColor, baseColor * _MinBrightness * 0.5);
                 
@@ -361,9 +334,7 @@ Shader "MMD/ToonFace_SDF"
             ENDHLSL
         }
         
-        // ============================================================
-        // Pass 3: Shadow Caster
-        // ============================================================
+        // 阴影投射
         Pass
         {
             Name "ShadowCaster"

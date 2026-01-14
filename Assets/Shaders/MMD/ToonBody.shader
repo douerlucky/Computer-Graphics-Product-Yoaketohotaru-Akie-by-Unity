@@ -1,63 +1,58 @@
-// ============================================================================
-// ToonBodyMMD.shader - Body/Clothes Toon Rendering
-// 用于：MMD模型的身体、衣服等主要部分
-// 图形学知识点：Lambert、Half Lambert、Blinn-Phong、Fresnel边缘光
-// ============================================================================
 
 Shader "MMD/ToonBody"
 {
     Properties
     {
-        // ====== Base Texture ======
+        // 基础纹理
         [Header(Base Texture)]
-        _BaseMap ("Base Map", 2D) = "white" {}
-        _BaseColor ("Base Color", Color) = (1, 1, 1, 1)
+        _BaseMap ("Base Map", 2D) = "white" {}           // 基础贴图
+        _BaseColor ("Base Color", Color) = (1, 1, 1, 1)  // 基础颜色叠加
         
-        // ====== Toon Shadow ======
+        // 卡通阴影参数
         [Header(Toon Shadow)]
-        _ShadowColor ("Shadow Color", Color) = (0.4, 0.45, 0.65, 1)
-        _ShadowThreshold ("Shadow Threshold", Range(0, 1)) = 0.7
-        _ShadowSoftness ("Shadow Softness", Range(0.001, 0.3)) = 0.1
-        _ShadowRampWidth ("Shadow Ramp Width", Range(0, 0.5)) = 0.1
+        _ShadowColor ("Shadow Color", Color) = (0.4, 0.45, 0.65, 1)  // 阴影颜色（通常偏蓝紫）
+        _ShadowThreshold ("Shadow Threshold", Range(0, 1)) = 0.7     // 阴影阈值（明暗分界线位置）
+        _ShadowSoftness ("Shadow Softness", Range(0.001, 0.3)) = 0.1 // 阴影软硬度
+        _ShadowRampWidth ("Shadow Ramp Width", Range(0, 0.5)) = 0.1  // 双层阴影宽度
         
-        // ====== Night Scene Brightness ======
+        // 夜景亮度控制
         [Header(Night Scene Brightness)]
-        _MinBrightness ("Min Brightness", Range(0, 1)) = 0.4
-        _AmbientColor ("Ambient Color", Color) = (0.15, 0.18, 0.3, 1)
-        _AmbientIntensity ("Ambient Intensity", Range(0, 1)) = 0.4
+        _MinBrightness ("Min Brightness", Range(0, 1)) = 0.4         // 最低亮度保护
+        _AmbientColor ("Ambient Color", Color) = (0.15, 0.18, 0.3, 1) // 环境光颜色
+        _AmbientIntensity ("Ambient Intensity", Range(0, 1)) = 0.4   // 环境光强度
         
-        // ====== Rim Light (Fresnel) ======
+        // 菲涅尔边缘光
         [Header(Rim Light)]
-        _RimColor ("Rim Color", Color) = (0.7, 0.8, 1.0, 1)
-        _RimPower ("Rim Power", Range(1, 10)) = 3.5
-        _RimIntensity ("Rim Intensity", Range(0, 2)) = 0.6
+        _RimColor ("Rim Color", Color) = (0.7, 0.8, 1.0, 1)  // 边缘光颜色
+        _RimPower ("Rim Power", Range(1, 10)) = 3.5          // 边缘光锐度
+        _RimIntensity ("Rim Intensity", Range(0, 2)) = 0.6   // 边缘光强度
         
-        // ====== Specular (Blinn-Phong) ======
+        // Blinn-Phong高光
         [Header(Specular)]
-        _SpecularColor ("Specular Color", Color) = (0.8, 0.85, 1.0, 1)
-        _SpecularPower ("Specular Power", Range(1, 128)) = 40
-        _SpecularIntensity ("Specular Intensity", Range(0, 2)) = 0.25
+        _SpecularColor ("Specular Color", Color) = (0.8, 0.85, 1.0, 1) // 高光颜色
+        _SpecularPower ("Specular Power", Range(1, 128)) = 40          // 高光锐度
+        _SpecularIntensity ("Specular Intensity", Range(0, 2)) = 0.25  // 高光强度
         
-        // ====== Outline ======
+        // 描边参数 
         [Header(Outline)]
-        _OutlineColor ("Outline Color", Color) = (0.1, 0.1, 0.15, 1)
-        _OutlineWidth ("Outline Width", Range(0, 0.005)) = 0.002
+        _OutlineColor ("Outline Color", Color) = (0.1, 0.1, 0.15, 1)  // 描边颜色
+        _OutlineWidth ("Outline Width", Range(0, 0.005)) = 0.002     // 描边宽度
     }
     
     SubShader
     {
         Tags
         {
-            "RenderPipeline" = "UniversalPipeline"
-            "RenderType" = "Opaque"
-            "Queue" = "Geometry"
+            "RenderPipeline" = "UniversalPipeline"  // URP渲染管线
+            "RenderType" = "Opaque"                  // 不透明物体
+            "Queue" = "Geometry"                     // 几何体队列
         }
         
         HLSLINCLUDE
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
             
-            // CBUFFER for SRP Batcher compatibility
+            // CBUFFER: SRP Batcher兼容性（提升性能）
             CBUFFER_START(UnityPerMaterial)
                 float4 _BaseMap_ST;
                 half4 _BaseColor;
@@ -83,16 +78,14 @@ Shader "MMD/ToonBody"
             
         ENDHLSL
         
-        // ============================================================
-        // Pass 1: Outline
-        // [Graphics] Back-face extrusion method
-        // ============================================================
+        // 描边渲染 背面扩展法
         Pass
         {
             Name "Outline"
             Tags { "LightMode" = "SRPDefaultUnlit" }
             
-            Cull Front      // Cull front faces, render back faces only
+            //剔除正面，只渲染背面
+            Cull Front      
             ZWrite On
             
             HLSLPROGRAM
@@ -101,34 +94,36 @@ Shader "MMD/ToonBody"
             
             struct Attributes
             {
-                float4 positionOS : POSITION;
-                float3 normalOS : NORMAL;
+                float4 positionOS : POSITION;  // 物体空间位置
+                float3 normalOS : NORMAL;      // 物体空间法线
             };
             
             struct Varyings
             {
-                float4 positionCS : SV_POSITION;
+                float4 positionCS : SV_POSITION;  // 裁剪空间位置
             };
             
+            // 描边顶点着色器
             Varyings OutlineVS(Attributes input)
             {
                 Varyings output;
                 
-                // Transform normal to world space
+                // 法线转换到世界空间
                 float3 normalWS = TransformObjectToWorldNormal(input.normalOS);
                 
-                // Transform position to world space
+                // 位置转换到世界空间
                 float3 positionWS = TransformObjectToWorld(input.positionOS.xyz);
                 
-                // Extrude along normal direction (this creates the outline)
+                // 顶点沿法线方向外扩
                 positionWS += normalWS * _OutlineWidth;
                 
-                // Transform to clip space
+                // 裁剪空间
                 output.positionCS = TransformWorldToHClip(positionWS);
                 
                 return output;
             }
             
+            // 直接输出描边颜色
             half4 OutlineFS(Varyings input) : SV_TARGET
             {
                 return _OutlineColor;
@@ -137,53 +132,59 @@ Shader "MMD/ToonBody"
             ENDHLSL
         }
         
-        // ============================================================
-        // Pass 2: Main Toon Rendering
-        // ============================================================
+        // 主卡通渲染
+        // 所有光照计算
         Pass
         {
             Name "ToonForward"
             Tags { "LightMode" = "UniversalForward" }
             
-            Cull Off        // Double-sided rendering
+            Cull Off        // 双面渲染
             ZWrite On
             
             HLSLPROGRAM
             #pragma vertex ToonVS
             #pragma fragment ToonFS
             
+            // 阴影相关的编译
             #pragma multi_compile _ _MAIN_LIGHT_SHADOWS
             #pragma multi_compile _ _MAIN_LIGHT_SHADOWS_CASCADE
             #pragma multi_compile _ _SHADOWS_SOFT
             
             struct Attributes
             {
-                float4 positionOS : POSITION;
-                float3 normalOS : NORMAL;
-                float2 uv : TEXCOORD0;
+                float4 positionOS : POSITION;  // 位置
+                float3 normalOS : NORMAL;      // 法线
+                float2 uv : TEXCOORD0;         // UV坐标
             };
             
             struct Varyings
             {
-                float4 positionCS : SV_POSITION;
-                float2 uv : TEXCOORD0;
-                float3 normalWS : TEXCOORD1;
-                float3 viewDirWS : TEXCOORD2;
-                float3 positionWS : TEXCOORD3;
+                float4 positionCS : SV_POSITION;   // 裁剪空间位置
+                float2 uv : TEXCOORD0;             // UV
+                float3 normalWS : TEXCOORD1;       // 世界空间法线
+                float3 viewDirWS : TEXCOORD2;      // 世界空间视线方向
+                float3 positionWS : TEXCOORD3;     // 世界空间位置
             };
             
+            // 顶点着色器
             Varyings ToonVS(Attributes input)
             {
                 Varyings output;
                 
+                // 位置变换
                 VertexPositionInputs posInputs = GetVertexPositionInputs(input.positionOS.xyz);
                 output.positionCS = posInputs.positionCS;
                 output.positionWS = posInputs.positionWS;
                 
+                // 法线变换
                 VertexNormalInputs normalInputs = GetVertexNormalInputs(input.normalOS);
                 output.normalWS = normalInputs.normalWS;
                 
+                // 视线方向
                 output.viewDirWS = GetWorldSpaceViewDir(posInputs.positionWS);
+                
+                // UV变换
                 output.uv = TRANSFORM_TEX(input.uv, _BaseMap);
                 
                 return output;
@@ -191,115 +192,89 @@ Shader "MMD/ToonBody"
             
             half4 ToonFS(Varyings input, bool isFrontFace : SV_IsFrontFace) : SV_TARGET
             {
-                // ========================================
-                // Step 1: Sample base texture
-                // ========================================
+                // 采样基础纹理
                 half4 baseMap = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv);
                 half3 baseColor = baseMap.rgb * _BaseColor.rgb;
                 
-                // ========================================
-                // Step 2: Get lighting info
-                // ========================================
+                //获取光照信息
                 float4 shadowCoord = TransformWorldToShadowCoord(input.positionWS);
                 Light mainLight = GetMainLight(shadowCoord);
                 
-                // ========================================
-                // Step 3: Prepare vectors
-                // N = Normal, L = Light direction, V = View direction
-                // ========================================
                 half3 N = normalize(input.normalWS);
                 
-                // Flip normal for back faces (required for double-sided)
+                // 处理背面法线
                 if (!isFrontFace)
                 {
                     N = -N;
                 }
                 
-                half3 L = normalize(mainLight.direction);
-                half3 V = normalize(input.viewDirWS);
+                half3 L = normalize(mainLight.direction);  // 光源方向
+                half3 V = normalize(input.viewDirWS);      // 视线方向
                 
-                // ========================================
-                // Step 4: Diffuse lighting
-                // [Graphics] Lambert: diffuse = N dot L
-                // [Graphics] Half Lambert: prevents completely black areas
-                // ========================================
+                // 漫反射光照
                 half NdotL = dot(N, L);
                 
-                // Half Lambert transform: maps [-1,1] to [0,1]
+                //Half Lambert变换
                 half halfLambert = NdotL * 0.5 + 0.5;
                 
-                // Apply minimum brightness
+                //最低亮度保护
                 halfLambert = max(halfLambert, _MinBrightness);
                 
-                // ========================================
-                // Step 5: Toon shadow (simulates RAMP texture)
-                // [Graphics] smoothstep creates controllable soft/hard edges
-                // ========================================
+                // 卡通阴影 smoothstep离散化 
                 half shadowMask = smoothstep(
-                    _ShadowThreshold - _ShadowSoftness,
-                    _ShadowThreshold + _ShadowSoftness,
+                    _ShadowThreshold - _ShadowSoftness,  // 阴影开始
+                    _ShadowThreshold + _ShadowSoftness,  // 阴影结束
                     halfLambert
                 );
                 
-                // Optional: second shadow layer for RAMP-like effect
+                // 第二层阴影
                 half shadowMask2 = smoothstep(
                     _ShadowThreshold - _ShadowSoftness - _ShadowRampWidth,
                     _ShadowThreshold - _ShadowSoftness,
                     halfLambert
                 );
                 
-                // Mix shadow colors
+                // 混合阴影颜色
                 half3 shadowColor = baseColor * _ShadowColor.rgb;
                 half3 midColor = lerp(shadowColor, baseColor, 0.6);
                 
-                // Two-level transition
+                //双层阴影过渡
                 half3 diffuse = lerp(shadowColor, midColor, shadowMask2);
                 diffuse = lerp(diffuse, baseColor, shadowMask);
                 
-                // ========================================
-                // Step 6: Ambient light
-                // ========================================
+                //环境光
                 half3 ambient = baseColor * _AmbientColor.rgb * _AmbientIntensity;
                 diffuse = diffuse + ambient;
                 
-                // ========================================
-                // Step 7: Apply Unity realtime shadow
-                // ========================================
+                // Unity实时阴影
                 diffuse *= lerp(0.6, 1.0, mainLight.shadowAttenuation);
                 
-                // ========================================
-                // Step 8: Rim light
-                // [Graphics] Fresnel effect: reflection increases at grazing angles
-                // rim = (1 - N dot V)^power
-                // ========================================
+                //菲涅尔边缘光
                 half NdotV = saturate(dot(N, V));
+                
                 half rim = pow(1.0 - NdotV, _RimPower);
                 
-                // Optional: only show rim on lit side
+                // 只在受光面显示边缘光
                 rim *= saturate(NdotL + 0.5);
                 
                 half3 rimColor = _RimColor.rgb * rim * _RimIntensity;
                 
-                // ========================================
-                // Step 9: Specular highlight
-                // [Graphics] Blinn-Phong model
-                // H = normalize(L + V), spec = (N dot H)^power
-                // ========================================
+                //  Blinn-Phong高光
+                
+                // 计算半程向量H 
                 half3 H = normalize(L + V);
+                
                 half NdotH = saturate(dot(N, H));
                 half spec = pow(NdotH, _SpecularPower);
                 
-                // Toon-style: make specular edge sharper
+                // 用smoothstep让高光边缘更锐利
                 spec = smoothstep(0.4, 0.42, spec);
                 
                 half3 specular = _SpecularColor.rgb * spec * _SpecularIntensity;
                 
-                // ========================================
-                // Step 10: Final composition
-                // ========================================
                 half3 finalColor = diffuse + rimColor + specular;
                 
-                // Final brightness protection
+                // 最终亮度保护
                 finalColor = max(finalColor, baseColor * _MinBrightness * 0.3);
                 
                 return half4(finalColor, 1.0);
@@ -308,9 +283,7 @@ Shader "MMD/ToonBody"
             ENDHLSL
         }
         
-        // ============================================================
-        // Pass 3: Shadow Caster
-        // ============================================================
+        //  阴影投射
         Pass
         {
             Name "ShadowCaster"
@@ -318,7 +291,7 @@ Shader "MMD/ToonBody"
             
             ZWrite On
             ZTest LEqual
-            ColorMask 0
+            ColorMask 0  // 不写入颜色，只写入深度
             Cull Off
             
             HLSLPROGRAM
@@ -351,7 +324,7 @@ Shader "MMD/ToonBody"
                     float3 lightDirectionWS = _LightDirection;
                 #endif
                 
-                // Apply shadow bias to prevent shadow acne
+                // 应用阴影偏移
                 float4 positionCS = TransformWorldToHClip(ApplyShadowBias(positionWS, normalWS, lightDirectionWS));
                 
                 #if UNITY_REVERSED_Z
@@ -378,7 +351,8 @@ Shader "MMD/ToonBody"
             ENDHLSL
         }
         
-        // Pass 4: Depth Only
+        // 深度写入
+        // 用于深度预pass和各种后处理效果
         Pass
         {
             Name "DepthOnly"

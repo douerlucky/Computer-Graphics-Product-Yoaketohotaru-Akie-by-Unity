@@ -1,65 +1,66 @@
+
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Playables;
 using UnityEngine.EventSystems;
 
-/// <summary>
-/// 场景模式管理器 - 完整版
-/// 
-/// 快捷键：
-/// - Tab: 显示/隐藏UI
-/// - F1: 切换相机模式
-/// - Space: 播放/暂停（鼠标解锁时）
-/// - R: 重播
-/// - F2: 图形设置面板
-/// </summary>
+//场景模式管理
+//控制自由视角和MMD播放两种模式的切换
 public class SceneModeManager : MonoBehaviour
 {
-    public enum SceneMode { FreeCamera, MMDPlayback }
+    // 场景模式
+    public enum SceneMode 
+    { 
+        FreeCamera,     // 自由视角模式
+        MMDPlayback     // MMD播放模式
+    }
+    
     
     [Header("当前模式")]
     public SceneMode currentMode = SceneMode.FreeCamera;
     
     [Header("相机设置")]
-    public Camera freeCamera;
-    public Camera mainCamera;
+    public Camera freeCamera;   // 自由视角相机
+    public Camera mainCamera;   // MMD动画相机
     
     [Header("Timeline")]
-    public PlayableDirector timeline;
+    public PlayableDirector timeline;  // Timeline播放控制器
     
     [Header("UI引用 - 主按钮")]
-    public GameObject uiPanel;
-    public Button freeCameraButton;
-    public Button mmdPlayButton;
-    public Text modeText;
-    public Text controlHintText;
+    public GameObject uiPanel;          // 主UI面板
+    public Button freeCameraButton;     // 自由视角按钮
+    public Button mmdPlayButton;        // MMD播放按钮
+    public Text modeText;               // 当前模式文本
+    public Text controlHintText;        // 控制提示文本
     
     [Header("UI引用 - 播放控制")]
-    public GameObject playbackPanel;
-    public Button playPauseButton;
-    public Button restartButton;
-    public Slider progressSlider;
-    public Text timeText;
+    public GameObject playbackPanel;    // 播放控制面板
+    public Button playPauseButton;      // 播放/暂停按钮
+    public Button restartButton;        // 重播按钮
+    public Slider progressSlider;       // 进度条
+    public Text timeText;               // 时间显示
     
     [Header("快捷键")]
-    public KeyCode toggleUIKey = KeyCode.Tab;
-    public KeyCode switchModeKey = KeyCode.F1;
-    public KeyCode playPauseKey = KeyCode.Space;
-    public KeyCode restartKey = KeyCode.R;
+    public KeyCode toggleUIKey = KeyCode.Tab;       // 切换UI显示
+    public KeyCode switchModeKey = KeyCode.F1;      // 切换模式
+    public KeyCode playPauseKey = KeyCode.Space;    // 播放/暂停
+    public KeyCode restartKey = KeyCode.R;          // 重播
     
     [Header("播放设置")]
-    public bool playInFreeCamera = true;
+    public bool playInFreeCamera = true;  // 自由视角模式下是否继续播放动画
     
     [Header("启动设置")]
-    public bool autoPlayOnStart = false;
+    public bool autoPlayOnStart = false;  // 启动时自动播放
+    
     
     private FreeCameraController freeCamController;
-    private bool isPlaying = false;
-    private bool isDraggingSlider = false;
+    private bool isPlaying = false;           // 当前是否在播放
+    private bool isDraggingSlider = false;    // 是否正在拖动进度条
     private EventSystem eventSystem;
     
     void Start()
     {
+        // 获取或添加FreeCameraController
         if (freeCamera != null)
         {
             freeCamController = freeCamera.GetComponent<FreeCameraController>();
@@ -69,6 +70,7 @@ public class SceneModeManager : MonoBehaviour
         
         eventSystem = FindObjectOfType<EventSystem>();
         
+        // Timeline初始化
         if (timeline != null)
         {
             if (autoPlayOnStart)
@@ -78,24 +80,29 @@ public class SceneModeManager : MonoBehaviour
             }
             else
             {
+                // 停在第一帧
                 timeline.time = 0;
-                timeline.Evaluate();
+                timeline.Evaluate();  // 当前帧
                 PauseTimeline();
                 isPlaying = false;
             }
         }
         
+        // 设置初始模式
         SetMode(SceneMode.FreeCamera);
+        
+        // 绑定UI按钮事件
         BindButtons();
     }
     
+    // 绑定UI按钮点击事件
     void BindButtons()
     {
         if (freeCameraButton != null)
         {
             freeCameraButton.onClick.RemoveAllListeners();
             freeCameraButton.onClick.AddListener(() => SetMode(SceneMode.FreeCamera));
-            DisableNavigation(freeCameraButton);
+            DisableNavigation(freeCameraButton);  // 禁用键盘导航，防止空格触发
         }
         
         if (mmdPlayButton != null)
@@ -126,6 +133,7 @@ public class SceneModeManager : MonoBehaviour
         }
     }
     
+    //禁用UI元素的键盘导航
     void DisableNavigation(Selectable selectable)
     {
         if (selectable == null) return;
@@ -134,9 +142,10 @@ public class SceneModeManager : MonoBehaviour
         selectable.navigation = nav;
     }
     
+    // 每帧更新
     void Update()
     {
-        // Tab - 显示/隐藏UI
+        // 显示/隐藏UI
         if (Input.GetKeyDown(toggleUIKey) && uiPanel != null)
         {
             uiPanel.SetActive(!uiPanel.activeSelf);
@@ -144,7 +153,7 @@ public class SceneModeManager : MonoBehaviour
                 playbackPanel.SetActive(uiPanel.activeSelf);
         }
         
-        // F1 - 切换模式
+        // 切换模式
         if (Input.GetKeyDown(switchModeKey))
         {
             if (currentMode == SceneMode.FreeCamera)
@@ -153,14 +162,15 @@ public class SceneModeManager : MonoBehaviour
                 SetMode(SceneMode.FreeCamera);
         }
         
-        // Space - 播放/暂停（只在鼠标解锁时生效，避免与FreeCamera的空格上升冲突）
+        // 播放/暂停
+        // 只在鼠标解锁时生效，避免与FreeCamera的空格上升冲突
         if (Input.GetKeyDown(playPauseKey))
         {
             if (Cursor.lockState != CursorLockMode.Locked)
                 TogglePlayPause();
         }
         
-        // R - 重播
+        // 重播
         if (Input.GetKeyDown(restartKey))
         {
             if (Cursor.lockState != CursorLockMode.Locked)
@@ -171,31 +181,49 @@ public class SceneModeManager : MonoBehaviour
         if (eventSystem != null && eventSystem.currentSelectedGameObject != null)
             eventSystem.SetSelectedGameObject(null);
         
+        // 更新进度条
         UpdateProgress();
     }
     
+    
+    //设置场景模式
     public void SetMode(SceneMode mode)
     {
         currentMode = mode;
         
         if (mode == SceneMode.FreeCamera)
         {
-            if (mainCamera != null) mainCamera.enabled = false;
+            // 切换到自由视角模式
+            
+            // 关闭主相机
+            if (mainCamera != null) 
+                mainCamera.enabled = false;
+            
+            // 开启自由相机
             if (freeCamera != null)
             {
                 freeCamera.enabled = true;
                 freeCamera.gameObject.SetActive(true);
             }
             
+            // 激活相机控制器
             if (freeCamController != null)
                 freeCamController.SetActive(true);
         }
         else
         {
+
+            // 切换到MMD播放模式
+            
+            // 停用自由相机控制器
             if (freeCamController != null)
                 freeCamController.SetActive(false);
             
-            if (freeCamera != null) freeCamera.enabled = false;
+            // 关闭自由相机
+            if (freeCamera != null) 
+                freeCamera.enabled = false;
+            
+            // 开启主相机（由Timeline控制）
             if (mainCamera != null)
             {
                 mainCamera.enabled = true;
@@ -206,6 +234,8 @@ public class SceneModeManager : MonoBehaviour
         UpdateUI();
     }
     
+    // Timeline播放控制
+
     public void TogglePlayPause()
     {
         if (isPlaying)
@@ -221,59 +251,70 @@ public class SceneModeManager : MonoBehaviour
         UpdateUI();
     }
     
+    //重播
     public void Restart()
     {
         if (timeline != null)
         {
-            timeline.time = 0;
-            timeline.Evaluate();
-            ResumeTimeline();
+            timeline.time = 0;      // 回到开头
+            timeline.Evaluate();    // 计算当前帧
+            ResumeTimeline();       // 开始播放
             isPlaying = true;
         }
         UpdateUI();
     }
     
+    //暂停Timeline
     void PauseTimeline()
     {
         if (timeline != null && timeline.playableGraph.IsValid())
             timeline.playableGraph.GetRootPlayable(0).SetSpeed(0);
     }
     
+    // 恢复Timeline播放
     void ResumeTimeline()
     {
         if (timeline != null && timeline.playableGraph.IsValid())
             timeline.playableGraph.GetRootPlayable(0).SetSpeed(1);
     }
     
+    // 进度条控制
+    // 进度条值改变回调
     void OnSliderChanged(float value)
     {
         if (isDraggingSlider && timeline != null)
         {
+            // 根据进度条值设置Timeline时间
             timeline.time = value * timeline.duration;
             timeline.Evaluate();
         }
     }
     
+    // 开始拖动进度条
     public void OnSliderBeginDrag()
     {
         isDraggingSlider = true;
-        PauseTimeline();
+        PauseTimeline();  // 拖动时暂停
     }
     
+    //结束拖动进度条
     public void OnSliderEndDrag()
     {
         isDraggingSlider = false;
         if (isPlaying)
-            ResumeTimeline();
+            ResumeTimeline();  // 如果之前在播放，恢复播放
     }
     
+    // 更新进度显示
     void UpdateProgress()
     {
         if (timeline == null) return;
         
+        // 更新进度条
         if (progressSlider != null && !isDraggingSlider)
             progressSlider.value = (float)(timeline.time / timeline.duration);
         
+        // 更新时间文本
         if (timeText != null)
         {
             int currentMin = (int)(timeline.time / 60);
@@ -284,8 +325,10 @@ public class SceneModeManager : MonoBehaviour
         }
     }
     
+    //更新UI显示
     void UpdateUI()
     {
+        // 更新模式文本
         if (modeText != null)
         {
             string playState = isPlaying ? "▶" : "⏸";
@@ -295,6 +338,7 @@ public class SceneModeManager : MonoBehaviour
                 modeText.text = $"MMD视角 {playState}";
         }
         
+        // 更新控制提示
         if (controlHintText != null)
         {
             if (currentMode == SceneMode.FreeCamera)
@@ -303,12 +347,14 @@ public class SceneModeManager : MonoBehaviour
                 controlHintText.text = "空格:播放/暂停 | R:重播 | F1:自由视角";
         }
         
+        // 更新按钮状态
         if (freeCameraButton != null)
             freeCameraButton.interactable = (currentMode != SceneMode.FreeCamera);
         
         if (mmdPlayButton != null)
             mmdPlayButton.interactable = (currentMode != SceneMode.MMDPlayback);
         
+        // 更新播放按钮文本
         if (playPauseButton != null)
         {
             var text = playPauseButton.GetComponentInChildren<Text>();
